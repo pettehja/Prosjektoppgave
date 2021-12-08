@@ -169,9 +169,9 @@ def construct_deltap_sqrt(data):
 
 
 def remove_low_values(pred, val):
-    treshold = 0.5
-    rule_pred = (pred < treshold)
-    rule_val = (val < treshold)
+    threshold = 0.5
+    rule_pred = (pred < threshold)
+    rule_val = (val < threshold)
 
     rule = rule_val | rule_pred
     pred = pred[~rule]
