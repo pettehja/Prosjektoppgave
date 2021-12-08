@@ -1,5 +1,4 @@
-import os
-from os import path
+from os import path, mkdir
 import torch.utils.data
 import matplotlib.pyplot as plt
 import pandas as pd
@@ -67,7 +66,7 @@ def generate_path(wellnum, mape, mae, mse):
     mae = str(round(mae, 3))
     mse = str(round(mse, 3))
     if not path.exists("results_stuff"):
-        os.mkdir("results_stuff")
+        mkdir("results_stuff")
     file_path = f'results_stuff/W{wellnum + 1} MSE {float(mse):4.4f} MAE {float(mae):.4f} MAPE {float(mape):.4f}' + '.png'
 
     return file_path
