@@ -1,0 +1,11 @@
+.idea/
+__pychace__/
+
+/venv
+/results
+
+#data
+train.csv/
+test.csv/
+val.csv/
+train_test.csv/ 
