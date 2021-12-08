@@ -16,39 +16,38 @@ torch.manual_seed(rseed)
 # todo https://www.mygreatlearning.com/blog/gridsearchcv/, https://scikit-learn.org/stable/modules/grid_search.html
 
 # HYPER PARAMETERS
-# INPUT_COLS =   [['CHK', 'PWH', 'PDC', 'TWH'],
-#                 ['CHK', 'PWH', 'PDC', 'TWH', 'FOIL_shifted'],
-#                 ['CHK', 'PWH', 'PDC', 'TWH', 'FGAS_shifted'],
-#                 ['CHK', 'PWH', 'PDC', 'TWH', 'Z'],
-#                 ['CHK', 'PWH', 'PDC', 'TWH', 'DeltaP2'],
-#                 ['CHK', 'PWH', 'PDC', 'TWH', 'FOIL_shifted', 'FGAS_shifted'],
-#                 ['CHK', 'PWH', 'PDC', 'TWH', 'FOIL_shifted', 'Z'],
-#                 ['CHK', 'PWH', 'PDC', 'TWH', 'FOIL_shifted', 'DeltaP2'],
-#                 ['CHK', 'PWH', 'PDC', 'TWH', 'FGAS_shifted', 'Z'],
-#                 ['CHK', 'PWH', 'PDC', 'TWH', 'FGAS_shifted', 'DeltaP2'],
-#                 ['CHK', 'PWH', 'PDC', 'TWH', 'Z', 'DeltaP2'],
-#                 ['CHK', 'PWH', 'PDC', 'TWH', 'FGAS_shifted', 'Z', 'DeltaP2'],
-#                 ['CHK', 'PWH', 'PDC', 'TWH', 'FOIL_shifted',  'Z', 'DeltaP2'],
-#                 ['CHK', 'PWH', 'PDC', 'TWH', 'FOIL_shifted', 'FGAS_shifted',  'DeltaP2'],
-#                 ['CHK', 'PWH', 'PDC', 'TWH', 'FOIL_shifted', 'FGAS_shifted', 'Z'],
-#                 ['CHK', 'PWH', 'PDC', 'TWH', 'FOIL_shifted', 'FGAS_shifted', 'Z', 'DeltaP2']] # components = ['T1', 'T2', 'CHK', 'PWH', 'PDC', 'TWH', 'Z', 'FOIL', 'FGAS', 'QGAS', 'QOIL', 'QWAT', 'QTOT', 'Type', 'Well']
+INPUT_COLS =   [['CHK', 'PWH', 'PDC', 'TWH'],
+                ['CHK', 'PWH', 'PDC', 'TWH', 'FOIL_shifted'],
+                ['CHK', 'PWH', 'PDC', 'TWH', 'FGAS_shifted'],
+                ['CHK', 'PWH', 'PDC', 'TWH', 'Z'],
+                ['CHK', 'PWH', 'PDC', 'TWH', 'DeltaP2'],
+                ['CHK', 'PWH', 'PDC', 'TWH', 'FOIL_shifted', 'FGAS_shifted'],
+                ['CHK', 'PWH', 'PDC', 'TWH', 'FOIL_shifted', 'Z'],
+                ['CHK', 'PWH', 'PDC', 'TWH', 'FOIL_shifted', 'DeltaP2'],
+                ['CHK', 'PWH', 'PDC', 'TWH', 'FGAS_shifted', 'Z'],
+                ['CHK', 'PWH', 'PDC', 'TWH', 'FGAS_shifted', 'DeltaP2'],
+                ['CHK', 'PWH', 'PDC', 'TWH', 'Z', 'DeltaP2'],
+                ['CHK', 'PWH', 'PDC', 'TWH', 'FGAS_shifted', 'Z', 'DeltaP2'],
+                ['CHK', 'PWH', 'PDC', 'TWH', 'FOIL_shifted',  'Z', 'DeltaP2'],
+                ['CHK', 'PWH', 'PDC', 'TWH', 'FOIL_shifted', 'FGAS_shifted',  'DeltaP2'],
+                ['CHK', 'PWH', 'PDC', 'TWH', 'FOIL_shifted', 'FGAS_shifted', 'Z'],
+                ['CHK', 'PWH', 'PDC', 'TWH', 'FOIL_shifted', 'FGAS_shifted', 'Z', 'DeltaP2']] # components = ['T1', 'T2', 'CHK', 'PWH', 'PDC', 'TWH', 'Z', 'FOIL', 'FGAS', 'QGAS', 'QOIL', 'QWAT', 'QTOT', 'Type', 'Well']
 OUTPUT_COLS = ['QTOT']
-INPUT_COLS =   ['CHK', 'PWH', 'PDC', 'TWH']
 hidden_layers = 50
-#n_epochs = [5000, 7500, 10000, 12500]
-#lr = [0.001, 0.002, 0.003]
-n_epochs = 3000
-lr =  0.003
+#n_epochs = [2500, 5000, 7500, 10000, 12500]
+# lr =  0.003
+lr = [0.001, 0.002, 0.003]
+n_epochs = 2500
 l2_reg = 0.003
 batch_size = 2048
 shuffle = True
-layers = [len(INPUT_COLS), hidden_layers, hidden_layers, hidden_layers, len(OUTPUT_COLS)]
+#layers = [len(INPUT_COLS), hidden_layers, hidden_layers, hidden_layers, len(OUTPUT_COLS)]
 
-def print_results(wellnum, net_p, mse_v, mae_v, mape_v, mse_t, mae_t, mape_t):
+def print_results(wellnum, net_p, mse_v, mae_v, mape_v, mse_t, mae_t, mape_t, i):
     print(f'________RESULTS FOR WELL: {wellnum + 1}________')
     print(f'Layers: {layers}')
     print(f'Number epochs: {n_epochs}')
-    print(f'Learning rate: {lr}')
+    print(f'Learning rate: {lr[i]}')
     print(f'Regularization (l2): {l2_reg}')
     print(f'Number of model parameters: {sum(p.numel() for p in net_p.parameters())}')
 
@@ -74,12 +73,12 @@ def generate_path(wellnum, mape, mae, mse):
     return file_path
 
 
-def plot_and_save(wellnum, y, pred, mae, mape, mse):
+def plot_and_save(wellnum, y, pred, mae, mape, mse, i,k):
     plt.figure(figsize=(16, 9))
     plt.plot(y.numpy(), label='Missing QTOT')
     plt.plot(pred.detach().numpy(), label='Estimated QTOT')
     plt.title(label=f'Details: well {wellnum + 1} MAE: {mae.item():.4f}, MSE: {mse.item():.4f}, MAPE: {mape.item():.4f} % \n '
-               f'Input columns: {INPUT_COLS}, \n Learning rate: {lr}, Epochs: {n_epochs}, L2-reg: {l2_reg}, \n'
+               f'Input columns: {INPUT_COLS[k]}, \n Learning rate: {lr[i]}, Epochs: {n_epochs}, L2-reg: {l2_reg}, \n'
                f'Layers: {layers}, Batch size: {batch_size}, Shuffle: {str(shuffle)}, Random seed: {rseed}'
                , fontdict=None, loc='center', pad=None)
     plt.legend()
@@ -169,9 +168,9 @@ def construct_deltap_sqrt(data):
 
 
 def remove_low_values(pred, val):
-    treshold = 0.5
-    rule_pred = (pred < treshold)
-    rule_val = (val < treshold)
+    threshold = 0.5
+    rule_pred = (pred < threshold)
+    rule_val = (val < threshold)
 
     rule = rule_val | rule_pred
     pred = pred[~rule]
@@ -208,47 +207,55 @@ if __name__ == "__main__":
 
     starttot = time.time()
     for well in range(5):
-        start = time.time()
-        print("\n________Starts training of well " + str(well + 1) + "________")
-        x_train = torch.from_numpy(training_data[well][INPUT_COLS].values).to(torch.float)
-        y_train = torch.from_numpy(training_data[well][OUTPUT_COLS].values).to(torch.float)
+        for i in range(len(lr)):
+            for k in range(len(INPUT_COLS)):
+                start = time.time()
+                layers = [len(INPUT_COLS[k]), hidden_layers, hidden_layers, hidden_layers, len(OUTPUT_COLS)]
+                print("\n________Starts training of well " + str(well + 1) + "________")
+                x_train = torch.from_numpy(training_data[well][INPUT_COLS[k]].values).to(torch.float)
+                y_train = torch.from_numpy(training_data[well][OUTPUT_COLS].values).to(torch.float)
 
-        x_val = torch.from_numpy(validation_data[well][INPUT_COLS].values).float().to(torch.float)
-        y_val = torch.from_numpy(validation_data[well][OUTPUT_COLS].values).float().to(torch.float)
+                x_val = torch.from_numpy(validation_data[well][INPUT_COLS[k]].values).float().to(torch.float)
+                y_val = torch.from_numpy(validation_data[well][OUTPUT_COLS].values).float().to(torch.float)
 
-        x_test = torch.from_numpy(test_data[well][INPUT_COLS].values).to(torch.float)
-        y_test = torch.from_numpy(test_data[well][OUTPUT_COLS].values).to(torch.float)
+                x_test = torch.from_numpy(test_data[well][INPUT_COLS[k]].values).to(torch.float)
+                y_test = torch.from_numpy(test_data[well][OUTPUT_COLS].values).to(torch.float)
 
-        train_dataset = torch.utils.data.TensorDataset(x_train, y_train)
-        train_loader = torch.utils.data.DataLoader(train_dataset, batch_size=batch_size, shuffle=shuffle)
-        val_dataset = torch.utils.data.TensorDataset(x_val, y_val)
-        val_loader = torch.utils.data.DataLoader(val_dataset, batch_size=len(validation_data[well][INPUT_COLS]), shuffle=shuffle)
+                train_dataset = torch.utils.data.TensorDataset(x_train, y_train)
+                train_loader = torch.utils.data.DataLoader(train_dataset, batch_size=batch_size, shuffle=shuffle)
+                val_dataset = torch.utils.data.TensorDataset(x_val, y_val)
+                val_loader = torch.utils.data.DataLoader(val_dataset, batch_size=len(validation_data[well][INPUT_COLS[k]]), shuffle=shuffle)
 
-        net = NeuralNetwork(layers)
-        net = train(net, train_loader, val_loader, n_epochs, lr, l2_reg)
+                net = NeuralNetwork(layers)
+                net = train(net, train_loader, val_loader, n_epochs, lr[i], l2_reg)
 
-        pred_val = net(x_val)
-        pred_test = net(x_test)
+                pred_val = net(x_val)
+                pred_test = net(x_test)
 
-        # remove low valuse from MAPE such that the MAPE doesn't explode
-        pred_val_mape, y_val_mape = remove_low_values(pred_val, y_val)
-        pred_test_mape,y_test_mape = remove_low_values(pred_test, y_test)
+                # remove low valuse from MAPE such that the MAPE doesn't explode
+                pred_val_mape, y_val_mape = remove_low_values(pred_val, y_val)
+                pred_test_mape, y_test_mape = remove_low_values(pred_test, y_test)
 
-        mse_val  = torch.mean(torch.pow(pred_val - y_val, 2))
-        mae_val  = torch.mean(torch.abs(pred_val - y_val))
-        mape_val = torch.mean(torch.abs(torch.div(pred_val_mape - y_val_mape, y_val_mape))) * 100
+                mse_val = torch.mean(torch.pow(pred_val - y_val, 2))
+                mae_val = torch.mean(torch.abs(pred_val - y_val))
+                mape_val = torch.mean(torch.abs(torch.div(pred_val_mape - y_val_mape, y_val_mape))) * 100
 
-        mse_test = torch.mean(torch.pow(pred_test - y_test, 2))
-        mae_test = torch.mean(torch.abs(pred_test - y_test))
-        mape_test = torch.mean(torch.abs(torch.div(pred_test_mape - y_test_mape, y_test_mape))) * 100
+                mse_test = torch.mean(torch.pow(pred_test - y_test, 2))
+                mae_test = torch.mean(torch.abs(pred_test - y_test))
+                mape_test = torch.mean(torch.abs(torch.div(pred_test_mape - y_test_mape, y_test_mape))) * 100
 
-        print_results(well, net, mse_val, mae_val, mape_val, mse_test, mae_test, mape_test)
-        # plot_and_save(well, y_test, pred_test, mae_test, mape_test, mse_test,i)
-        plot_and_save(well, y_val, pred_val, mae_val, mape_val, mse_val)
-        end = time.time()
+                print_results(well, net, mse_val, mae_val, mape_val, mse_test, mae_test, mape_test, i)
+                # plot_and_save(well, y_test, pred_test, mae_test, mape_test, mse_test,i)
+                plot_and_save(well, y_val, pred_val, mae_val, mape_val, mse_val, i, k)
+                end = time.time()
 
-        print("Time elapsed for well " + str(well+1) + ": " + str(round(end-start,4)) + " seconds, aka " + str(round((end-start)/60,4)) + " minutes.")
-        print("____________________________________")
+                print("Time elapsed for well " + str(well + 1) + ": " + str(
+                    round(end - start, 4)) + " seconds, aka " + str(round((end - start) / 60, 4)) + " minutes.")
+                print("____________________________________")
+
+        endtot = time.time()
+        print("Total time elapsed: " + str(round((endtot - starttot) / 60, 4)) + " minutes.")
+
 
         ############# SAVE ################
         # Everything you would like to save.
