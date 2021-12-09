@@ -33,21 +33,18 @@ INPUT_COLS =   [['CHK', 'PWH', 'PDC', 'TWH'],
                 ['CHK', 'PWH', 'PDC', 'TWH', 'FOIL_shifted', 'FGAS_shifted', 'Z', 'DeltaP2']] # components = ['T1', 'T2', 'CHK', 'PWH', 'PDC', 'TWH', 'Z', 'FOIL', 'FGAS', 'QGAS', 'QOIL', 'QWAT', 'QTOT', 'Type', 'Well']
 OUTPUT_COLS = ['QTOT']
 hidden_layers = 50
-#n_epochs = [2500, 5000, 7500, 10000, 12500]
-# lr =  0.003
+n_epochs = [2500, 5000, 7500, 10000, 12500]
 lr = [0.001, 0.002, 0.003]
-n_epochs = 2500
-l2_reg = 0.003
+l2_reg = [0.005, 0.003]
 batch_size = 2048
 shuffle = True
-#layers = [len(INPUT_COLS), hidden_layers, hidden_layers, hidden_layers, len(OUTPUT_COLS)]
 
-def print_results(wellnum, net_p, mse_v, mae_v, mape_v, mse_t, mae_t, mape_t, i):
+def print_results(wellnum, net_p, lrate, epochs, layer, regularization, mse_v, mae_v, mape_v, mse_t, mae_t, mape_t):
     print(f'________RESULTS FOR WELL: {wellnum + 1}________')
-    print(f'Layers: {layers}')
-    print(f'Number epochs: {n_epochs}')
-    print(f'Learning rate: {lr[i]}')
-    print(f'Regularization (l2): {l2_reg}')
+    print(f'Layers: {layer}')
+    print(f'Number epochs: {epochs}')
+    print(f'Learning rate: {lrate}')
+    print(f'Regularization (l2): {regularization}')
     print(f'Number of model parameters: {sum(p.numel() for p in net_p.parameters())}')
 
     print('\nError on validation data')
@@ -61,29 +58,36 @@ def print_results(wellnum, net_p, mse_v, mae_v, mape_v, mse_t, mae_t, mape_t, i)
     # print(f'MAPE: {round(mape_t.item(),4)} % \n')
 
 
-def generate_path(wellnum, mape, mae, mse):
+def generate_path(wellnum, features, mape, mae, mse):
     mape = str(round(mape, 3))
     mae = str(round(mae, 3))
     mse = str(round(mse, 3))
+
+    features = str(features)[1:-1]
+
     if not path.exists("results_stuff"):
         mkdir("results_stuff")
-    file_path = f'results_stuff/W{wellnum + 1} MSE {float(mse):4.4f} MAE {float(mae):.4f} MAPE {float(mape):.4f}' + '.png'
+    if not path.exists(f'results_stuff/W{wellnum + 1}'):
+        mkdir(f'results_stuff/W{wellnum + 1}')
+    if not path.exists(f'results_stuff/W{wellnum + 1}/{features}'):
+        mkdir(f'results_stuff/W{wellnum + 1}/{features}')
+    file_path = f'results_stuff/W{wellnum + 1}/{features}/ W{wellnum + 1} MSE {float(mse):4.4f} MAE {float(mae):.4f} MAPE {float(mape):.4f}' + '.png'
 
     return file_path
 
 
-def plot_and_save(wellnum, y, pred, mae, mape, mse, i,k):
+def plot_and_save(wellnum, y, pred, mae, mape, mse, lrate, features, regulatization, epochs):
     plt.figure(figsize=(16, 9))
     plt.plot(y.numpy(), label='Missing QTOT')
     plt.plot(pred.detach().numpy(), label='Estimated QTOT')
     plt.title(label=f'Details: well {wellnum + 1} MAE: {mae.item():.4f}, MSE: {mse.item():.4f}, MAPE: {mape.item():.4f} % \n '
-               f'Input columns: {INPUT_COLS[k]}, \n Learning rate: {lr[i]}, Epochs: {n_epochs}, L2-reg: {l2_reg}, \n'
+               f'Input columns: {features}, \n Learning rate: {lrate}, Epochs: {epochs}, L2-reg: {regulatization}, \n'
                f'Layers: {layers}, Batch size: {batch_size}, Shuffle: {str(shuffle)}, Random seed: {rseed}'
                , fontdict=None, loc='center', pad=None)
     plt.legend()
     plt.xlabel("Samples")
     plt.ylabel("Flow (QTOT)")
-    plt.savefig(generate_path(wellnum, mape.item(), mae.item(), mse.item()), bbox_inches='tight')
+    plt.savefig(generate_path(wellnum, features, mape.item(), mae.item(), mse.item()), bbox_inches='tight')
     #plt.show()
     plt.clf()
 
@@ -154,10 +158,10 @@ def remove_faulty_data(data_init):
 
 
 def shift_data_in_column(data, column, setfillto):
-    for i in range(len(data)):
-        shifted = data[i][column].shift(periods=1)
+    for index in range(len(data)):
+        shifted = data[index][column].shift(periods=1)
         shifted = shifted.fillna(setfillto)
-        data[i][column + '_shifted'] = shifted
+        data[index][column + '_shifted'] = shifted
     return data
 
 
@@ -177,6 +181,12 @@ def remove_low_values(pred, val):
 
     return pred, val
 
+
+def length_of_data(string, data):
+    for welln in range(len(data)):
+        print("Length of " + string + " of W" + str(welln + 1) + ": " + str(len(data[welln])))
+
+
 if __name__ == "__main__":
     all_training_data = pd.read_csv('train.csv', index_col=0)
     all_validation_data = pd.read_csv('val.csv', index_col=0)
@@ -193,6 +203,9 @@ if __name__ == "__main__":
     training_data = split_data_by_well(all_training_data)
     validation_data = split_data_by_well(all_validation_data)
     test_data = split_data_by_well(all_testing_data)
+    length_of_data("Training data", training_data)
+    length_of_data("validation_data", validation_data)
+    length_of_data("test_data", test_data)
 
     training_data = shift_data_in_column(data = training_data, column = 'FOIL', setfillto = 0.333)
     training_data = shift_data_in_column(data = training_data, column = 'FGAS', setfillto = 0.667)
@@ -205,55 +218,57 @@ if __name__ == "__main__":
     test_data = shift_data_in_column(data = test_data, column = 'Z', setfillto = 0.8)
 
     starttot = time.time()
-    for well in range(5):
-        for i in range(len(lr)):
+    for reg in range(len(l2_reg)):
+        for well in range(5):
             for k in range(len(INPUT_COLS)):
-                start = time.time()
-                layers = [len(INPUT_COLS[k]), hidden_layers, hidden_layers, hidden_layers, len(OUTPUT_COLS)]
-                print("\n________Starts training of well " + str(well + 1) + "________")
-                x_train = torch.from_numpy(training_data[well][INPUT_COLS[k]].values).to(torch.float)
-                y_train = torch.from_numpy(training_data[well][OUTPUT_COLS].values).to(torch.float)
+                for j in range(len(n_epochs)):
+                    for i in range(len(lr)):
+                        start = time.time()
+                        layers = [len(INPUT_COLS[k]), hidden_layers, hidden_layers, hidden_layers, len(OUTPUT_COLS)]
+                        print("\n________Starts training of well " + str(well + 1) + "________")
+                        x_train = torch.from_numpy(training_data[well][INPUT_COLS[k]].values).to(torch.float)
+                        y_train = torch.from_numpy(training_data[well][OUTPUT_COLS].values).to(torch.float)
 
-                x_val = torch.from_numpy(validation_data[well][INPUT_COLS[k]].values).float().to(torch.float)
-                y_val = torch.from_numpy(validation_data[well][OUTPUT_COLS].values).float().to(torch.float)
+                        x_val = torch.from_numpy(validation_data[well][INPUT_COLS[k]].values).float().to(torch.float)
+                        y_val = torch.from_numpy(validation_data[well][OUTPUT_COLS].values).float().to(torch.float)
 
-                x_test = torch.from_numpy(test_data[well][INPUT_COLS[k]].values).to(torch.float)
-                y_test = torch.from_numpy(test_data[well][OUTPUT_COLS].values).to(torch.float)
+                        x_test = torch.from_numpy(test_data[well][INPUT_COLS[k]].values).to(torch.float)
+                        y_test = torch.from_numpy(test_data[well][OUTPUT_COLS].values).to(torch.float)
 
-                train_dataset = torch.utils.data.TensorDataset(x_train, y_train)
-                train_loader = torch.utils.data.DataLoader(train_dataset, batch_size=batch_size, shuffle=shuffle)
-                val_dataset = torch.utils.data.TensorDataset(x_val, y_val)
-                val_loader = torch.utils.data.DataLoader(val_dataset, batch_size=len(validation_data[well][INPUT_COLS[k]]), shuffle=shuffle)
+                        train_dataset = torch.utils.data.TensorDataset(x_train, y_train)
+                        train_loader = torch.utils.data.DataLoader(train_dataset, batch_size=batch_size, shuffle=shuffle)
+                        val_dataset = torch.utils.data.TensorDataset(x_val, y_val)
+                        val_loader = torch.utils.data.DataLoader(val_dataset, batch_size=len(validation_data[well][INPUT_COLS[k]]), shuffle=shuffle)
 
-                net = NeuralNetwork(layers)
-                net = train(net, train_loader, val_loader, n_epochs, lr[i], l2_reg)
+                        net = NeuralNetwork(layers)
+                        net = train(net, train_loader, val_loader, n_epochs[j], lr[i], l2_reg[reg])
 
-                pred_val = net(x_val)
-                pred_test = net(x_test)
+                        pred_val = net(x_val)
+                        pred_test = net(x_test)
 
-                # remove low valuse from MAPE such that the MAPE doesn't explode
-                pred_val_mape, y_val_mape = remove_low_values(pred_val, y_val)
-                pred_test_mape, y_test_mape = remove_low_values(pred_test, y_test)
+                        # remove low valuse from MAPE such that the MAPE doesn't explode
+                        pred_val_mape, y_val_mape = remove_low_values(pred_val, y_val)
+                        pred_test_mape, y_test_mape = remove_low_values(pred_test, y_test)
 
-                mse_val = torch.mean(torch.pow(pred_val - y_val, 2))
-                mae_val = torch.mean(torch.abs(pred_val - y_val))
-                mape_val = torch.mean(torch.abs(torch.div(pred_val_mape - y_val_mape, y_val_mape))) * 100
+                        mse_val = torch.mean(torch.pow(pred_val - y_val, 2))
+                        mae_val = torch.mean(torch.abs(pred_val - y_val))
+                        mape_val = torch.mean(torch.abs(torch.div(pred_val_mape - y_val_mape, y_val_mape))) * 100
 
-                mse_test = torch.mean(torch.pow(pred_test - y_test, 2))
-                mae_test = torch.mean(torch.abs(pred_test - y_test))
-                mape_test = torch.mean(torch.abs(torch.div(pred_test_mape - y_test_mape, y_test_mape))) * 100
+                        mse_test = torch.mean(torch.pow(pred_test - y_test, 2))
+                        mae_test = torch.mean(torch.abs(pred_test - y_test))
+                        mape_test = torch.mean(torch.abs(torch.div(pred_test_mape - y_test_mape, y_test_mape))) * 100
 
-                print_results(well, net, mse_val, mae_val, mape_val, mse_test, mae_test, mape_test, i)
-                # plot_and_save(well, y_test, pred_test, mae_test, mape_test, mse_test,i)
-                plot_and_save(well, y_val, pred_val, mae_val, mape_val, mse_val, i, k)
-                end = time.time()
+                        print_results(well, net, lr[i], n_epochs[j], layers, l2_reg[reg], mse_val, mae_val, mape_val, mse_test, mae_test, mape_test)
+                        # plot_and_save(well, y_test, pred_test, mae_test, mape_test, mse_test,i)
+                        plot_and_save(well, y_val, pred_val, mae_val, mape_val, mse_val, lr[i], INPUT_COLS[k], l2_reg[reg] , n_epochs[j])
+                        end = time.time()
 
-                print("Time elapsed for well " + str(well + 1) + ": " + str(
-                    round(end - start, 4)) + " seconds, aka " + str(round((end - start) / 60, 4)) + " minutes.")
-                print("____________________________________")
+                        print("Time elapsed for well " + str(well + 1) + ": " + str(
+                            round(end - start, 4)) + " seconds, aka " + str(round((end - start) / 60, 4)) + " minutes.")
+                        print("____________________________________")
 
-        endtot = time.time()
-        print("Total time elapsed: " + str(round((endtot - starttot) / 60, 4)) + " minutes.")
+    endtot = time.time()
+    print("Total time elapsed: " + str(round((endtot - starttot) / 60, 4)) + " minutes.")
 
 
         ############# SAVE ################
