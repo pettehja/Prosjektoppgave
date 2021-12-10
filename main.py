@@ -171,15 +171,16 @@ def construct_deltap_sqrt(data):
 
 
 def remove_low_values(pred, val):
-    threshold = 0.5
+    threshold = 1
     rule_pred = (pred < threshold)
     rule_val = (val < threshold)
 
     rule = rule_val | rule_pred
-    pred = pred[~rule]
-    val = val[~rule]
 
-    return pred, val
+    pred_filtered = pred[~rule]
+    val_filtered = val[~rule]
+
+    return pred_filtered, val_filtered
 
 
 def length_of_data(string, data):
