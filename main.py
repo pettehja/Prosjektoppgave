@@ -15,22 +15,23 @@ torch.manual_seed(rseed)
 # todo https://www.mygreatlearning.com/blog/gridsearchcv/, https://scikit-learn.org/stable/modules/grid_search.html
 
 # HYPER PARAMETERS
-INPUT_COLS =   [['CHK', 'PWH', 'PDC', 'TWH'],
-                ['CHK', 'PWH', 'PDC', 'TWH', 'FOIL_shifted'],
-                ['CHK', 'PWH', 'PDC', 'TWH', 'FGAS_shifted'],
-                ['CHK', 'PWH', 'PDC', 'TWH', 'Z'],
-                ['CHK', 'PWH', 'PDC', 'TWH', 'DeltaP2'],
-                ['CHK', 'PWH', 'PDC', 'TWH', 'FOIL_shifted', 'FGAS_shifted'],
-                ['CHK', 'PWH', 'PDC', 'TWH', 'FOIL_shifted', 'Z'],
-                ['CHK', 'PWH', 'PDC', 'TWH', 'FOIL_shifted', 'DeltaP2'],
-                ['CHK', 'PWH', 'PDC', 'TWH', 'FGAS_shifted', 'Z'],
-                ['CHK', 'PWH', 'PDC', 'TWH', 'FGAS_shifted', 'DeltaP2'],
-                ['CHK', 'PWH', 'PDC', 'TWH', 'Z', 'DeltaP2'],
-                ['CHK', 'PWH', 'PDC', 'TWH', 'FGAS_shifted', 'Z', 'DeltaP2'],
-                ['CHK', 'PWH', 'PDC', 'TWH', 'FOIL_shifted',  'Z', 'DeltaP2'],
-                ['CHK', 'PWH', 'PDC', 'TWH', 'FOIL_shifted', 'FGAS_shifted',  'DeltaP2'],
-                ['CHK', 'PWH', 'PDC', 'TWH', 'FOIL_shifted', 'FGAS_shifted', 'Z'],
-                ['CHK', 'PWH', 'PDC', 'TWH', 'FOIL_shifted', 'FGAS_shifted', 'Z', 'DeltaP2']] # components = ['T1', 'T2', 'CHK', 'PWH', 'PDC', 'TWH', 'Z', 'FOIL', 'FGAS', 'QGAS', 'QOIL', 'QWAT', 'QTOT', 'Type', 'Well']
+INPUT_COLS =   [['CHK','PWH','PDC','TWH'],
+                ['CHK','PWH','PDC','TWH','DeltaP2'],
+                ['CHK','PWH','PDC','TWH','FGAS_shifted'],
+                ['CHK','PWH','PDC','TWH','FGAS_shifted','DeltaP2'],
+                ['CHK','PWH','PDC','TWH','FGAS_shifted','Z'],
+                ['CHK','PWH','PDC','TWH','FGAS_shifted','Z','DeltaP2'],
+                ['CHK','PWH','PDC','TWH','FOIL_shifted'],
+                ['CHK','PWH','PDC','TWH','FOIL_shifted','DeltaP2'],
+                ['CHK','PWH','PDC','TWH','FOIL_shifted','FGAS_shifted'],
+                ['CHK','PWH','PDC','TWH','FOIL_shifted','FGAS_shifted','DeltaP2'],
+                ['CHK','PWH','PDC','TWH','FOIL_shifted','FGAS_shifted','Z'],
+                ['CHK','PWH','PDC','TWH','FOIL_shifted','FGAS_shifted','Z','DeltaP2'],
+                ['CHK','PWH','PDC','TWH','FOIL_shifted','Z'],
+                ['CHK','PWH','PDC','TWH','FOIL_shifted','Z','DeltaP2'],
+                ['CHK','PWH','PDC','TWH','Z'],
+                ['CHK','PWH','PDC','TWH','Z','DeltaP2']]
+                # components = ['T1', 'T2', 'CHK', 'PWH', 'PDC', 'TWH', 'Z', 'FOIL', 'FGAS', 'QGAS', 'QOIL', 'QWAT', 'QTOT', 'Type', 'Well']
 OUTPUT_COLS = ['QTOT']
 hidden_layers = 50
 n_epochs = [2500, 5000, 7500, 10000, 12500]
@@ -59,9 +60,9 @@ def print_results(wellnum, net_p, lrate, epochs, layer, regularization, mse_v, m
 
 
 def generate_path(wellnum, features, mape, mae, mse):
-    mape = str(round(mape, 3))
-    mae = str(round(mae, 3))
-    mse = str(round(mse, 3))
+    mape = str(round(mape, 4))
+    mae = str(round(mae, 4))
+    mse = str(round(mse, 4))
 
     features = str(features)[1:-1]
 
@@ -87,6 +88,7 @@ def plot_and_save(wellnum, y, pred, mae, mape, mse, lrate, features, regulatizat
     plt.legend()
     plt.xlabel("Samples")
     plt.ylabel("Flow (QTOT)")
+    plt.grid()
     plt.savefig(generate_path(wellnum, features, mape.item(), mae.item(), mse.item()), bbox_inches='tight')
     #plt.show()
     plt.clf()
@@ -172,7 +174,7 @@ def construct_deltap_sqrt(data):
 
 def remove_low_values(pred, val):
     threshold = 1
-    rule_pred = (pred < threshold)
+    rule_pred = (pred < threshold) # todo dont remove bad predictions, just low val values
     rule_val = (val < threshold)
 
     rule = rule_val | rule_pred
