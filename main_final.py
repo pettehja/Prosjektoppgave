@@ -39,37 +39,25 @@ def print_results(wellnum, net_p, lrate, epochs, layer, regularization, mse_v, m
     print(f'MAPE: {round(mape_t.item(),4)} % \n')
 
 
-def generate_path(wellnum, features, mape, mae, mse):
+def generate_path(wellnum, features, mape, mae, mse, final):
     mape = str(round(mape, 3))
     mae = str(round(mae, 3))
     mse = str(round(mse, 3))
 
     features = str(features)[1:-1]
-
     if not path.exists("results_stuff"):
         mkdir("results_stuff")
     if not path.exists(f'results_stuff/W{wellnum + 1}'):
         mkdir(f'results_stuff/W{wellnum + 1}')
+
+    if final:
+        file_path = f'results_stuff/W{wellnum + 1}/W{wellnum + 1} MSE {float(mse):4.4f} MAE {float(mae):.4f} MAPE {float(mape):.4f}' + '.png'
+        return file_path
+
     if not path.exists(f'results_stuff/W{wellnum + 1}/{features}'):
         mkdir(f'results_stuff/W{wellnum + 1}/{features}')
+
     file_path = f'results_stuff/W{wellnum + 1}/{features}/ W{wellnum + 1} MSE {float(mse):4.4f} MAE {float(mae):.4f} MAPE {float(mape):.4f}' + '.png'
-
-    return file_path
-
-
-def generate_path_final(wellnum, features, mape, mae, mse):
-    mape = str(round(mape, 3))
-    mae = str(round(mae, 3))
-    mse = str(round(mse, 3))
-
-    features = str(features)[1:-1]
-
-    if not path.exists("results_stuff"):
-        mkdir("results_stuff")
-    if not path.exists(f'results_stuff/W{wellnum + 1}'):
-        mkdir(f'results_stuff/W{wellnum + 1}')
-    file_path = f'results_stuff/W{wellnum + 1}/W{wellnum + 1} MSE {float(mse):4.4f} MAE {float(mae):.4f} MAPE {float(mape):.4f}' + '.png'
-
     return file_path
 
 
@@ -84,10 +72,8 @@ def plot_and_save(wellnum, y, pred, mae, mape, mse, lrate, features, regulatizat
     plt.legend()
     plt.xlabel("Samples")
     plt.ylabel("Flow (QTOT)")
-    if final:
-        plt.savefig(generate_path(wellnum, features, mape.item(), mae.item(), mse.item()), bbox_inches='tight')
-    else:
-        plt.savefig(generate_path_final(wellnum, features, mape.item(), mae.item(), mse.item()), bbox_inches='tight')
+    plt.savefig(generate_path(wellnum, features, mape.item(), mae.item(), mse.item(), final), bbox_inches='tight')
+
     #plt.show()
     plt.clf()
 
@@ -304,7 +290,7 @@ if __name__ == "__main__":
     for well in range(5):
         for i in range(16):  # number of different feature combinations
             features_ = get_features(i, well)
-            INPUT_COLS, lr, n_epochs, l2_reg = features_[0], features_[1], features_[2], features_[3]
+            INPUT_COLS, lr, n_epochs, l2_reg = features_[0], features_[1], int(features_[2]/100), features_[3]
             print("input: ", INPUT_COLS, " lr: ", lr, " epochs: ", n_epochs, " reg: ", l2_reg, "\n")
             start = time.time()
             layers = [len(INPUT_COLS), hidden_layers, hidden_layers, hidden_layers, len(OUTPUT_COLS)]
