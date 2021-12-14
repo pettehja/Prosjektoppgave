@@ -84,7 +84,7 @@ def plot_and_save(wellnum, y, pred, mae, mape, mse, lrate, features, regulatizat
     plt.legend()
     plt.xlabel("Samples")
     plt.ylabel("Flow (QTOT)")
-    if final:
+    if not final:
         plt.savefig(generate_path(wellnum, features, mape.item(), mae.item(), mse.item()), bbox_inches='tight')
     else:
         plt.savefig(generate_path_final(wellnum, features, mape.item(), mae.item(), mse.item()), bbox_inches='tight')
@@ -249,10 +249,27 @@ def get_features(index, wellnum):
 
     elif wellnum == 3: # well 4
         feats = [
-            ]
+            [['CHK', 'PWH', 'PDC', 'TWH'],                                                  0.003, 12500, 0.005],
+            [['CHK', 'PWH', 'PDC', 'TWH', 'DeltaP2'],                                       0.001, 10000, 0.003],
+            [['CHK', 'PWH', 'PDC', 'TWH', 'FGAS_shifted'],                                  0.003, 12500, 0.005],
+            [['CHK', 'PWH', 'PDC', 'TWH', 'FGAS_shifted', 'DeltaP2'],                       0.001, 10000, 0.003],
+            [['CHK', 'PWH', 'PDC', 'TWH', 'FGAS_shifted', 'Z'],                             0.003, 12500, 0.003],
+            [['CHK', 'PWH', 'PDC', 'TWH', 'FGAS_shifted', 'Z', 'DeltaP2'],                  0.001, 10000, 0.003],
+            [['CHK', 'PWH', 'PDC', 'TWH', 'FOIL_shifted'],                                  0.003, 12500, 0.003],
+            [['CHK', 'PWH', 'PDC', 'TWH', 'FOIL_shifted', 'DeltaP2'],                       0.002, 12500, 0.003],
+            [['CHK', 'PWH', 'PDC', 'TWH', 'FOIL_shifted', 'FGAS_shifted'],                  0.001, 10000, 0.005],
+            [['CHK', 'PWH', 'PDC', 'TWH', 'FOIL_shifted', 'FGAS_shifted', 'DeltaP2'],       0.003, 12500, 0.003],
+            [['CHK', 'PWH', 'PDC', 'TWH', 'FOIL_shifted', 'FGAS_shifted', 'Z'],             0.003, 12500, 0.003],
+            [['CHK', 'PWH', 'PDC', 'TWH', 'FOIL_shifted', 'FGAS_shifted', 'Z', 'DeltaP2'],  0.003, 12500, 0.003],
+            [['CHK', 'PWH', 'PDC', 'TWH', 'FOIL_shifted', 'Z'],                             0.003,  7500, 0.003],
+            [['CHK', 'PWH', 'PDC', 'TWH', 'FOIL_shifted', 'Z', 'DeltaP2'],                  0.003, 12500, 0.003],
+            [['CHK', 'PWH', 'PDC', 'TWH', 'Z'],                                             0.001, 12500, 0.003],
+            [['CHK', 'PWH', 'PDC', 'TWH', 'Z', 'DeltaP2'],                                  0.003, 10000, 0.005]]
+
 
     elif wellnum == 4: # well 5
         feats = [
+
             ]
 
     else:
