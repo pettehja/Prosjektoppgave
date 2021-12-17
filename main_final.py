@@ -258,8 +258,23 @@ def get_features(index, wellnum):
 
     elif wellnum == 4: # well 5
         feats = [
-
-            ]
+            [['CHK', 'PWH', 'PDC', 'TWH'],                                                  0.002, 12500, 0.005],
+            [['CHK', 'PWH', 'PDC', 'TWH', 'DeltaP2'],                                       0.003,  7500, 0.003],
+            [['CHK', 'PWH', 'PDC', 'TWH', 'FGAS_shifted'],                                  0.003, 12500, 0.005],
+            [['CHK', 'PWH', 'PDC', 'TWH', 'FGAS_shifted', 'DeltaP2'],                       0.001, 12500, 0.003],
+            [['CHK', 'PWH', 'PDC', 'TWH', 'FGAS_shifted', 'Z'],                             0.003, 10000, 0.005],
+            [['CHK', 'PWH', 'PDC', 'TWH', 'FGAS_shifted', 'Z', 'DeltaP2'],                  0.003, 12500, 0.005],
+            [['CHK', 'PWH', 'PDC', 'TWH', 'FOIL_shifted'],                                  0.002, 12500, 0.003],
+            [['CHK', 'PWH', 'PDC', 'TWH', 'FOIL_shifted', 'DeltaP2'],                       0.002, 12500, 0.005],
+            [['CHK', 'PWH', 'PDC', 'TWH', 'FOIL_shifted', 'FGAS_shifted'],                  0.003, 10000, 0.005],
+            [['CHK', 'PWH', 'PDC', 'TWH', 'FOIL_shifted', 'FGAS_shifted', 'DeltaP2'],       0.003, 10000, 0.005],
+            [['CHK', 'PWH', 'PDC', 'TWH', 'FOIL_shifted', 'FGAS_shifted', 'Z'],             0.003,  7500, 0.003],
+            [['CHK', 'PWH', 'PDC', 'TWH', 'FOIL_shifted', 'FGAS_shifted', 'Z', 'DeltaP2'],  0.003,  5000, 0.003],
+            [['CHK', 'PWH', 'PDC', 'TWH', 'FOIL_shifted', 'Z'],                             0.002, 10000, 0.005],
+            [['CHK', 'PWH', 'PDC', 'TWH', 'FOIL_shifted', 'Z', 'DeltaP2'],                  0.002,  5000, 0.005],
+            [['CHK', 'PWH', 'PDC', 'TWH', 'Z'],                                             0.003, 12500, 0.005],
+            [['CHK', 'PWH', 'PDC', 'TWH', 'Z', 'DeltaP2'],                                  0.003, 10000, 0.005]]
+            
 
     else:
         assert well > 4, "No more features :)"
