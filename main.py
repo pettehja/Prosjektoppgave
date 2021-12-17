@@ -10,10 +10,6 @@ import pickle
 rseed = 12345
 torch.manual_seed(rseed)
 
-# todo https://github.com/Bjarten/early-stopping-pytorch
-# todo https://stackabuse.com/grid-search-optimization-algorithm-in-python/, https://towardsdatascience.com/gridsearchcv-for-beginners-db48a90114ee
-# todo https://www.mygreatlearning.com/blog/gridsearchcv/, https://scikit-learn.org/stable/modules/grid_search.html
-
 # HYPER PARAMETERS
 INPUT_COLS =   [['CHK','PWH','PDC','TWH'],
                 ['CHK','PWH','PDC','TWH','DeltaP2'],
@@ -274,36 +270,6 @@ if __name__ == "__main__":
     print("Total time elapsed: " + str(round((endtot - starttot) / 60, 4)) + " minutes.")
 
 
-        ############# SAVE ################
-        # Everything you would like to save.
-        # OBS: numpy arrays and torch tensors cannot be saved, must be lists or numbers
-
-        # dict_to_save = {
-        #     'seed': rseed,
-        #     'mse_val': mse_val.item(),
-        #     'mse_test': mse_test.item(),
-        #     'pred_val': pred_val.tolist(),
-        #     'pred_test': pred_test.tolist(),
-        #     'y_val': y_val.tolist(),
-        #     'y_test': y_test.tolist()
-        # }
-        #
-        # pickle.dump(dict_to_save, file=open('ex1.p', 'wb'))
-        #
-        # res = pickle.load(open('ex1.p', 'rb'))
-        # #print(res)
-        #
-        # Y_tr = torch.tensor(res['y_val'], dtype=torch.float64)
-        # Y_p_tr = torch.tensor(res['pred_val'], dtype=torch.float64)
-        #
-        # mae = (Y_p_tr - Y_tr).abs().mean()
-        # # OBS MAPE is very large as values are very small
-        # mape = ((Y_p_tr - Y_tr).abs() / Y_tr.abs()).mean() * 100.0
-        # print("MAE", mae)
-        # print("MAPE", mape)
-
-    endtot = time.time()
-    print("Total time elapsed: " + str(round((endtot-starttot)/60,4)) + " minutes.")
 
 
 
