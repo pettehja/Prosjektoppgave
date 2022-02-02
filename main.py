@@ -5,34 +5,34 @@ import pandas as pd
 import time
 from neuralNet import NeuralNetwork
 from train import train
-import pickle
+#import pickle
 
 rseed = 12345
 torch.manual_seed(rseed)
 
 # HYPER PARAMETERS
-INPUT_COLS =   [['CHK','PWH','PDC','TWH'],
-                ['CHK','PWH','PDC','TWH','DeltaP2'],
-                ['CHK','PWH','PDC','TWH','FGAS_shifted'],
-                ['CHK','PWH','PDC','TWH','FGAS_shifted','DeltaP2'],
-                ['CHK','PWH','PDC','TWH','FGAS_shifted','Z'],
-                ['CHK','PWH','PDC','TWH','FGAS_shifted','Z','DeltaP2'],
-                ['CHK','PWH','PDC','TWH','FOIL_shifted'],
-                ['CHK','PWH','PDC','TWH','FOIL_shifted','DeltaP2'],
-                ['CHK','PWH','PDC','TWH','FOIL_shifted','FGAS_shifted'],
-                ['CHK','PWH','PDC','TWH','FOIL_shifted','FGAS_shifted','DeltaP2'],
-                ['CHK','PWH','PDC','TWH','FOIL_shifted','FGAS_shifted','Z'],
-                ['CHK','PWH','PDC','TWH','FOIL_shifted','FGAS_shifted','Z','DeltaP2'],
-                ['CHK','PWH','PDC','TWH','FOIL_shifted','Z'],
-                ['CHK','PWH','PDC','TWH','FOIL_shifted','Z','DeltaP2'],
-                ['CHK','PWH','PDC','TWH','Z'],
-                ['CHK','PWH','PDC','TWH','Z','DeltaP2']]
+INPUT_COLS =   ['CHK','PWH','PDC','TWH']
+                # ['CHK','PWH','PDC','TWH','DeltaP2'],
+                # ['CHK','PWH','PDC','TWH','FGAS_shifted'],
+                # ['CHK','PWH','PDC','TWH','FGAS_shifted','DeltaP2'],
+                # ['CHK','PWH','PDC','TWH','FGAS_shifted','Z'],
+                # ['CHK','PWH','PDC','TWH','FGAS_shifted','Z','DeltaP2'],
+                # ['CHK','PWH','PDC','TWH','FOIL_shifted'],
+                # ['CHK','PWH','PDC','TWH','FOIL_shifted','DeltaP2'],
+                # ['CHK','PWH','PDC','TWH','FOIL_shifted','FGAS_shifted'],
+                # ['CHK','PWH','PDC','TWH','FOIL_shifted','FGAS_shifted','DeltaP2'],
+                # ['CHK','PWH','PDC','TWH','FOIL_shifted','FGAS_shifted','Z'],
+                # ['CHK','PWH','PDC','TWH','FOIL_shifted','FGAS_shifted','Z','DeltaP2'],
+                # ['CHK','PWH','PDC','TWH','FOIL_shifted','Z'],
+                # ['CHK','PWH','PDC','TWH','FOIL_shifted','Z','DeltaP2'],
+                # ['CHK','PWH','PDC','TWH','Z'],
+                # ['CHK','PWH','PDC','TWH','Z','DeltaP2']
                 # components = ['T1', 'T2', 'CHK', 'PWH', 'PDC', 'TWH', 'Z', 'FOIL', 'FGAS', 'QGAS', 'QOIL', 'QWAT', 'QTOT', 'Type', 'Well']
 OUTPUT_COLS = ['QTOT']
 hidden_layers = 50
-n_epochs = [2500, 5000, 7500, 10000, 12500]
-lr = [0.001, 0.002, 0.003]
-l2_reg = [0.005, 0.003]
+n_epochs = 50
+lr = 0.002
+l2_reg = 0.005
 batch_size = 2048
 shuffle = True
 
@@ -60,15 +60,17 @@ def generate_path(wellnum, features, mape, mae, mse):
     mae = str(round(mae, 4))
     mse = str(round(mse, 4))
 
+    folder = "plots"
+
     features = str(features)[1:-1]
 
-    if not path.exists("results_stuff"):
-        mkdir("results_stuff")
-    if not path.exists(f'results_stuff/W{wellnum + 1}'):
-        mkdir(f'results_stuff/W{wellnum + 1}')
-    if not path.exists(f'results_stuff/W{wellnum + 1}/{features}'):
-        mkdir(f'results_stuff/W{wellnum + 1}/{features}')
-    file_path = f'results_stuff/W{wellnum + 1}/{features}/ W{wellnum + 1} MSE {float(mse):4.4f} MAE {float(mae):.4f} MAPE {float(mape):.4f}' + '.png'
+    if not path.exists(folder):
+        mkdir(folder)
+    if not path.exists(f'{folder}/W{wellnum + 1}'):
+        mkdir(f'{folder}/W{wellnum + 1}')
+    if not path.exists(f'{folder}/W{wellnum + 1}/{features}'):
+        mkdir(f'{folder}/W{wellnum + 1}/{features}')
+    file_path = f'{folder}/W{wellnum + 1}/{features}/ W{wellnum + 1} MSE {float(mse):4.4f} MAE {float(mae):.4f} MAPE {float(mape):.4f}' + '.png'
 
     return file_path
 
@@ -217,54 +219,50 @@ if __name__ == "__main__":
     test_data = shift_data_in_column(data = test_data, column = 'Z', setfillto = 0.8)
 
     starttot = time.time()
-    for reg in range(len(l2_reg)):
-        for well in range(5):
-            for k in range(len(INPUT_COLS)):
-                for j in range(len(n_epochs)):
-                    for i in range(len(lr)):
-                        start = time.time()
-                        layers = [len(INPUT_COLS[k]), hidden_layers, hidden_layers, hidden_layers, len(OUTPUT_COLS)]
-                        print("\n________Starts training of well " + str(well + 1) + "________")
-                        x_train = torch.from_numpy(training_data[well][INPUT_COLS[k]].values).to(torch.float)
-                        y_train = torch.from_numpy(training_data[well][OUTPUT_COLS].values).to(torch.float)
+    for well_iter in range(5):
+        start = time.time()
+        layers = [len(INPUT_COLS), hidden_layers, hidden_layers, hidden_layers, len(OUTPUT_COLS)]
+        print("\n________Starts training of well " + str(well_iter + 1) + "________")
+        x_train = torch.from_numpy(training_data[well_iter][INPUT_COLS].values).to(torch.float)
+        y_train = torch.from_numpy(training_data[well_iter][OUTPUT_COLS].values).to(torch.float)
 
-                        x_val = torch.from_numpy(validation_data[well][INPUT_COLS[k]].values).float().to(torch.float)
-                        y_val = torch.from_numpy(validation_data[well][OUTPUT_COLS].values).float().to(torch.float)
+        x_val = torch.from_numpy(validation_data[well_iter][INPUT_COLS].values).float().to(torch.float)
+        y_val = torch.from_numpy(validation_data[well_iter][OUTPUT_COLS].values).float().to(torch.float)
 
-                        x_test = torch.from_numpy(test_data[well][INPUT_COLS[k]].values).to(torch.float)
-                        y_test = torch.from_numpy(test_data[well][OUTPUT_COLS].values).to(torch.float)
+        x_test = torch.from_numpy(test_data[well_iter][INPUT_COLS].values).to(torch.float)
+        y_test = torch.from_numpy(test_data[well_iter][OUTPUT_COLS].values).to(torch.float)
 
-                        train_dataset = torch.utils.data.TensorDataset(x_train, y_train)
-                        train_loader = torch.utils.data.DataLoader(train_dataset, batch_size=batch_size, shuffle=shuffle)
-                        val_dataset = torch.utils.data.TensorDataset(x_val, y_val)
-                        val_loader = torch.utils.data.DataLoader(val_dataset, batch_size=len(validation_data[well][INPUT_COLS[k]]), shuffle=shuffle)
+        train_dataset = torch.utils.data.TensorDataset(x_train, y_train)
+        train_loader = torch.utils.data.DataLoader(train_dataset, batch_size=batch_size, shuffle=shuffle)
+        val_dataset = torch.utils.data.TensorDataset(x_val, y_val)
+        val_loader = torch.utils.data.DataLoader(val_dataset, batch_size=len(validation_data[well_iter][INPUT_COLS]), shuffle=shuffle)
 
-                        net = NeuralNetwork(layers)
-                        net = train(net, train_loader, val_loader, n_epochs[j], lr[i], l2_reg[reg])
+        net = NeuralNetwork(layers)
+        net = train(net, train_loader, val_loader, n_epochs, lr, l2_reg)
 
-                        pred_val = net(x_val)
-                        pred_test = net(x_test)
+        pred_val = net(x_val)
+        pred_test = net(x_test)
 
-                        # remove low valuse from MAPE such that the MAPE doesn't explode
-                        pred_val_mape, y_val_mape = remove_low_values(pred_val, y_val)
-                        pred_test_mape, y_test_mape = remove_low_values(pred_test, y_test)
+        # remove low valuse from MAPE such that the MAPE doesn't explode
+        pred_val_mape, y_val_mape = remove_low_values(pred_val, y_val)
+        pred_test_mape, y_test_mape = remove_low_values(pred_test, y_test)
 
-                        mse_val = torch.mean(torch.pow(pred_val - y_val, 2))
-                        mae_val = torch.mean(torch.abs(pred_val - y_val))
-                        mape_val = torch.mean(torch.abs(torch.div(pred_val_mape - y_val_mape, y_val_mape))) * 100
+        mse_val = torch.mean(torch.pow(pred_val - y_val, 2))
+        mae_val = torch.mean(torch.abs(pred_val - y_val))
+        mape_val = torch.mean(torch.abs(torch.div(pred_val_mape - y_val_mape, y_val_mape))) * 100
 
-                        mse_test = torch.mean(torch.pow(pred_test - y_test, 2))
-                        mae_test = torch.mean(torch.abs(pred_test - y_test))
-                        mape_test = torch.mean(torch.abs(torch.div(pred_test_mape - y_test_mape, y_test_mape))) * 100
+        mse_test = torch.mean(torch.pow(pred_test - y_test, 2))
+        mae_test = torch.mean(torch.abs(pred_test - y_test))
+        mape_test = torch.mean(torch.abs(torch.div(pred_test_mape - y_test_mape, y_test_mape))) * 100
 
-                        print_results(well, net, lr[i], n_epochs[j], layers, l2_reg[reg], mse_val, mae_val, mape_val, mse_test, mae_test, mape_test)
-                        # plot_and_save(well, y_test, pred_test, mae_test, mape_test, mse_test,i)
-                        plot_and_save(well, y_val, pred_val, mae_val, mape_val, mse_val, lr[i], INPUT_COLS[k], l2_reg[reg] , n_epochs[j])
-                        end = time.time()
+        print_results(well_iter, net, lr, n_epochs, layers, l2_reg, mse_val, mae_val, mape_val, mse_test, mae_test, mape_test)
+        # plot_and_save(well, y_test, pred_test, mae_test, mape_test, mse_test,i)
+        plot_and_save(well_iter, y_val, pred_val, mae_val, mape_val, mse_val, lr, INPUT_COLS, l2_reg, n_epochs)
+        end = time.time()
 
-                        print("Time elapsed for well " + str(well + 1) + ": " + str(
-                            round(end - start, 4)) + " seconds, aka " + str(round((end - start) / 60, 4)) + " minutes.")
-                        print("____________________________________")
+        print("Time elapsed for well " + str(well_iter + 1) + ": " + str(
+            round(end - start, 4)) + " seconds, aka " + str(round((end - start) / 60, 4)) + " minutes.")
+        print("____________________________________")
 
     endtot = time.time()
     print("Total time elapsed: " + str(round((endtot - starttot) / 60, 4)) + " minutes.")
